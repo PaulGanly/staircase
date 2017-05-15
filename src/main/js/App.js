@@ -2,9 +2,11 @@
 
 const React = require('react');
 const ReactDOM = require('react-dom');
+const Fetch = require('whatwg-fetch');
 const BootStrap = require('react-bootstrap');
 const StepsPanel = require('./StepsPanel').default;
 const StridesPanel = require('./StridesPanel').default;
+const BaseUrl = "/calculate-steps";
 
 class StairsStepsRow {
     constructor(rowNumber) {
@@ -32,8 +34,37 @@ class App extends React.Component {
     }
 
     handleSubmit(event) {
-        alert('A stairsFlights was submitted: ' + this.state.stepsArray + 'With stride length: ' + this.state.strideLength);
         event.preventDefault();
+        var requestUrl = this.buildRequestUrl();
+        var requestBody = this.buildRquestBody();
+        
+        fetch(requestUrl, {
+    	  method: 'POST',
+    	  headers: {
+    	    'Content-Type': 'application/json'
+    	  },
+    	  body: requestBody
+    	}).then(function(response) {
+		  console.log(response.headers.get('Content-Type'))
+		  console.log(response.headers.get('Date'))
+		  console.log(response.status)
+		  console.log(response.statusText)
+		  console.log(response.body)
+		})
+        
+    }
+    
+    buildRequestUrl() {
+        return BaseUrl + "?strideLength=" + this.state.strideLength;
+    }
+    
+    buildRquestBody(){
+    	var stepsIntegerArray = [];
+    	var arrayLength = this.state.stepsArray.length;
+    	for (var i = 0; i < arrayLength; i++) {
+    		stepsIntegerArray.push(this.state.stepsArray[i].steps);
+    	}
+    	return JSON.stringify(stepsIntegerArray);
     }
 
     increaseStairsFlights() {

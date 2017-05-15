@@ -1,19 +1,37 @@
 package com.paulganly.staircase.api;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.paulganly.staircase.model.CalculateStepsRequest;
+import com.paulganly.staircase.calculator.StepsCalculator;
+import com.paulganly.staircase.model.CalcluatedStepsResponse;
 
 @Controller
-public class CalculateStepsApiController implements CalculateStepsApi {
+public class CalculateStepsApiController {
 
-	@Override
-	public ResponseEntity<Integer> calculateSteps(@ModelAttribute CalculateStepsRequest calculateStepsRequest) {
+	@Autowired
+	StepsCalculator stepsCalculator;
+
+	@RequestMapping(value = "/calculate-steps", method = RequestMethod.GET)
+	@ResponseBody
+	public ResponseEntity<Integer> showApi() {
 		// TODO Auto-generated method stub
 		return new ResponseEntity<Integer>(HttpStatus.OK);
+	}
+
+	@RequestMapping(value = "/calculate-steps", method = RequestMethod.POST)
+	public @ResponseBody ResponseEntity<CalcluatedStepsResponse> calculateSteps(
+			@RequestParam(value = "strideLength", required = true) final int strideLength,
+			@RequestBody final Integer[] stairsFlights) {
+		CalcluatedStepsResponse response = stepsCalculator.calculateSteps(strideLength, stairsFlights);
+		return new ResponseEntity<CalcluatedStepsResponse>(response, HttpStatus.OK);
 	}
 
 }
