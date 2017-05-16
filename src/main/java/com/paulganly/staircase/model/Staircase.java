@@ -23,7 +23,8 @@ public class Staircase {
 	}
 
 	/**
-	 *
+	 * This method generates a list 2d array of integers that represents the stairs. This map of the
+	 * staircase is returned to the front-end.
 	 */
 	private void generateStepArrayMap() {
 
@@ -37,54 +38,33 @@ public class Staircase {
 		}
 		setStepsMap(convertToIntArray(countEachStepFromBottom(stepMapList, stairsFlights)));
 	}
-
+	
 	/**
-	 *
-	 * @param stepMapList
-	 * @return
+	 * This method creates a list of row integers that represents the stairs.
+	 * 
+	 * @param flight
+	 * @param strideLength
+	 * @return the stairs step map
 	 */
-	private int[][] convertToIntArray(List<List<Integer>> stepMapList) {
-		int columns = stepMapList.get(0).size();
-		int rows = stepMapList.size();
+	private List<List<Integer>> createRowsListGivenFlight(FlightOfStairs flight, int strideLength){
+		List<List<Integer>> rowList = new ArrayList<>();
+		int rows = getRowsRequiredForFlight(flight);
+		int columns = getColumnsRequiredForFlight(flight);
 
-		int[][] stepMap = new int[rows][columns];
-		int rowCount = 0;
+		rowList = fillEachRowForFlight(rows, columns, flight, strideLength);
 
-		for(List<Integer> row: stepMapList){
-			int columnCount = 0;
-			for(Integer column: row){
-				stepMap[rowCount][columnCount] = column;
-				columnCount ++;
-			}
-			rowCount ++;
+		if (!flight.isForwardFacing()) {
+			reverseEachRow(rowList);
 		}
 
-		return stepMap;
+		return rowList;
 	}
-
+	
 	/**
-	 *
-	 * @param stepMapList
-	 * @param stairsFlights
-	 * @return
-	 */
-	private List<List<Integer>> countEachStepFromBottom(List<List<Integer>> stepMapList, List<FlightOfStairs> stairsFlights) {
-		int currentCount = 1;
-		int lastRowIndex = stepMapList.size() - 1;
-		for(int i = lastRowIndex; i >= 0; i--){
-			int lastColumnindex = stepMapList.get(i).size() - 1;
-			for(int j = 0; j <= lastColumnindex; j++){
-				if(USED_STEP_IN_MAP.equals(stepMapList.get(i).get(j))){
-					stepMapList.get(i).set(j, currentCount);
-					currentCount ++;
-				}
-			}
-		}
-		return stepMapList;
-	}
-
-	/**
-	 *
+	 * We must zero pad each of the rows so that they are all the same length. We must also add
+	 * zero padding to each of the rows where the start of the current flight will not meet the end of
+	 * the previous
+	 * 
 	 * @param stepMapList
 	 * @param currentFlightMap
 	 * @param flight
@@ -119,10 +99,62 @@ public class Staircase {
 	}
 
 	/**
+	 * Takes the list of the rows of integers of our steps map and convers them to a 2D array,
+	 * ready to be used in the API response.
 	 *
+	 * @param stepMapList
+	 * @return a 2d array of the steps map
+	 */
+	private int[][] convertToIntArray(List<List<Integer>> stepMapList) {
+		int columns = stepMapList.get(0).size();
+		int rows = stepMapList.size();
+
+		int[][] stepMap = new int[rows][columns];
+		int rowCount = 0;
+
+		for(List<Integer> row: stepMapList){
+			int columnCount = 0;
+			for(Integer column: row){
+				stepMap[rowCount][columnCount] = column;
+				columnCount ++;
+			}
+			rowCount ++;
+		}
+
+		return stepMap;
+	}
+
+	/**
+	 * Cycles through the rows of the steps map. For each element we come across that equals 1 (i.e. the steps that have been used)
+	 * , we convert it's value to the step number.
+	 * 
+	 * @param stepMapList
+	 * @param stairsFlights
+	 * @return the steps map with the steps count converted to the correct value
+	 */
+	private List<List<Integer>> countEachStepFromBottom(List<List<Integer>> stepMapList, List<FlightOfStairs> stairsFlights) {
+		int currentCount = 1;
+		int lastRowIndex = stepMapList.size() - 1;
+		for(int i = lastRowIndex; i >= 0; i--){
+			int lastColumnindex = stepMapList.get(i).size() - 1;
+			for(int j = 0; j <= lastColumnindex; j++){
+				if(USED_STEP_IN_MAP.equals(stepMapList.get(i).get(j))){
+					stepMapList.get(i).set(j, currentCount);
+					currentCount ++;
+				}
+			}
+		}
+		return stepMapList;
+	}
+
+	/**
+	 * We want the new flight of steps to meet the point were the previous ones ended. Therefore,
+	 * we must add an offset to either the start or end of the rows so that the starting point
+	 * of the new flight is push left or right to meet the end of the previous flight.
+	 * 
 	 * @param offset
 	 * @param currentFlightMap
-	 * @param flight
+	 * @param the new flight with an offset added
 	 */
 	private void addOffsetsToNewRows(int offset, List<List<Integer>> currentFlightMap, FlightOfStairs flight) {
 		if(flight.isForwardFacing()){
@@ -133,11 +165,13 @@ public class Staircase {
 	}
 
 	/**
-	 *
+	 * Calculates the required offset for the current row (i.e. the number of zeroes to pad the row with)
+	 * 
 	 * @param endIndexOfPreviousFlight
 	 * @param currentFlight
 	 * @param previousFlightsWidth
-	 * @return
+	 * @return the number of zeroes we must pad the row with so that the start of this flight meets the
+	 * end of the last
 	 */
 	private int getOffset(int endIndexOfPreviousFlight, FlightOfStairs currentFlight, int previousFlightsWidth) {
 		int offset = 0;
@@ -151,9 +185,11 @@ public class Staircase {
 	}
 
 	/**
-	 *
+	 * Get the index (or column in the map) where previous flight of stairs ended, so that
+	 * we can match the start of the next flight to this point.
+	 * 
 	 * @param stepMapList
-	 * @return
+	 * @return the index where previous flight of stairs ended 
 	 */
 	private int getLastIndexOfPreviousFlight(List<List<Integer>> stepMapList) {
 		List<Integer> lastRow = stepMapList.get(0);
@@ -168,10 +204,12 @@ public class Staircase {
 	}
 
 	/**
-	 *
+	 * A method which adds a padding of zeroes to the start of each row supplied. The number of
+	 * zeroes added is given by the difference value.
+	 * 
 	 * @param difference
 	 * @param stepMapList
-	 * @return
+	 * @return stepsMapList that has a padding of zeroes added to the start of each row
 	 */
 	private List<List<Integer>> padStartOfAllRows(int difference, List<List<Integer>> stepMapList) {
 		List<Integer> zeroesList = new ArrayList<Integer>(Collections.nCopies(difference, 0));
@@ -184,10 +222,12 @@ public class Staircase {
 	}
 
 	/**
-	 *
+	 * A method which adds a padding of zeroes to the end of each row supplied. The number of
+	 * zeroes added is given by the difference value.
+	 * 
 	 * @param difference
 	 * @param stepMapList
-	 * @return
+	 * @return stepsMapList that has a padding of zeroes added to the end of each row
 	 */
 	private List<List<Integer>> padEndOfAllRows(int difference, List<List<Integer>> stepMapList) {
 		List<Integer> zeroesList = new ArrayList<Integer>(Collections.nCopies(difference, 0));
@@ -199,27 +239,9 @@ public class Staircase {
 	}
 
 	/**
-	 *
-	 * @param flight
-	 * @param strideLength
-	 * @return
-	 */
-	private List<List<Integer>> createRowsListGivenFlight(FlightOfStairs flight, int strideLength){
-		List<List<Integer>> rowList = new ArrayList<>();
-		int rows = getRowsRequiredForFlight(flight);
-		int columns = getColumnsRequiredForFlight(flight);
-
-		rowList = fillEachRowForFlight(rows, columns, flight, strideLength);
-
-		if (!flight.isForwardFacing()) {
-			reverseEachRow(rowList);
-		}
-
-		return rowList;
-	}
-
-	/**
-	 *
+	 * Every alternative flight of stairs must face the opposite direction, to achieve this
+	 * we reverse each of the rows of the stairs flight.
+	 * 
 	 * @param rowList
 	 */
 	private void reverseEachRow(List<List<Integer>> rowList) {
@@ -229,12 +251,19 @@ public class Staircase {
 	}
 
 	/**
-	 *
+	 * For the give fight of stairs we create a list of rows of integers that represent the steps of the
+	 * stairs. The elements of each of the rows falls under three categories: 1) steps that have been stepped 
+	 * on by the user  2) steps that have been skipped by the user  3) empty blocks. These are represented
+	 * by different numbers 1, -1, 0 respectively. 
+	 * 
+	 * This method cycles through each of the rows and fills in the values for each element given the
+	 * stairs size and the length of stride of the user.
+	 * 
 	 * @param rows
 	 * @param columns
 	 * @param flight
 	 * @param strideLength
-	 * @return
+	 * @return the list of rows of integers (the steps map for this flight of stairs)
 	 */
 	private List<List<Integer>> fillEachRowForFlight(int rows, int columns, FlightOfStairs flight, int strideLength) {
 		List<List<Integer>> rowList = new ArrayList<>();
@@ -271,9 +300,11 @@ public class Staircase {
 	}
 
 	/**
-	 *
+	 * Calculates the columns in the steps map required of the given flight of stairs.
+	 * Flights with a landing at the end require more columns.
+	 * 
 	 * @param flight
-	 * @return
+	 * @return the number of columns required
 	 */
 	private int getColumnsRequiredForFlight(FlightOfStairs flight) {
 		int width = 0;
@@ -288,9 +319,11 @@ public class Staircase {
 	}
 
 	/**
-	 *
+	 * Calculates the rows in the steps map required of the given flight of stairs.
+	 * Flights with a landing at the end require an extra row.
+	 * 
 	 * @param flight
-	 * @return
+	 * @return the number of rows required
 	 */
 	private int getRowsRequiredForFlight(FlightOfStairs flight) {
 		int height = 0;

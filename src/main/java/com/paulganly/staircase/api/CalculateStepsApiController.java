@@ -22,7 +22,7 @@ public class CalculateStepsApiController implements CalculateStepsApi {
 	@RequestMapping(value = "/calculate-steps", method = RequestMethod.GET)
 	@ResponseBody
 	public ResponseEntity<Integer> showApi() {
-		// TODO Auto-generated method stub
+		// TODO Implement this
 		return new ResponseEntity<Integer>(HttpStatus.OK);
 	}
 
