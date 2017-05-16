@@ -64,7 +64,7 @@ class StepsPanel extends React.Component {
 						</BootStrap.Button>
 					</BootStrap.InputGroup.Button>
 				</BootStrap.InputGroup>
-				<BootStrap.HelpBlock>A number between 1 and 30</BootStrap.HelpBlock>
+				<BootStrap.HelpBlock>A number between 1 and 20</BootStrap.HelpBlock>
 			</div>
 			);
 		});
