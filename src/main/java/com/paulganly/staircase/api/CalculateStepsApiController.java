@@ -14,7 +14,7 @@ import com.paulganly.staircase.calculator.StepsCalculator;
 import com.paulganly.staircase.model.CalcluatedStepsResponse;
 
 @Controller
-public class CalculateStepsApiController {
+public class CalculateStepsApiController implements CalculateStepsApi {
 
 	@Autowired
 	StepsCalculator stepsCalculator;
@@ -30,8 +30,13 @@ public class CalculateStepsApiController {
 	public @ResponseBody ResponseEntity<CalcluatedStepsResponse> calculateSteps(
 			@RequestParam(value = "strideLength", required = true) final int strideLength,
 			@RequestBody final Integer[] stairsFlights) {
-		CalcluatedStepsResponse response = stepsCalculator.calculateSteps(strideLength, stairsFlights);
-		return new ResponseEntity<CalcluatedStepsResponse>(response, HttpStatus.OK);
-	}
 
+		if(stepsCalculator.isValidInput(strideLength, stairsFlights)){
+			CalcluatedStepsResponse response = stepsCalculator.calculateSteps(strideLength, stairsFlights);
+			return new ResponseEntity<CalcluatedStepsResponse>(response, HttpStatus.OK);
+		}else{
+			return new ResponseEntity<CalcluatedStepsResponse>(new CalcluatedStepsResponse(), HttpStatus.BAD_REQUEST);
+		}
+
+	}
 }

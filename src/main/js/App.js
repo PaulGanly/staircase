@@ -6,6 +6,7 @@ const Fetch = require('whatwg-fetch');
 const BootStrap = require('react-bootstrap');
 const StepsPanel = require('./StepsPanel').default;
 const StridesPanel = require('./StridesPanel').default;
+const ResultsModal = require('./ResultsModal').default;
 const BaseUrl = "/calculate-steps";
 
 class StairsStepsRow {
@@ -21,7 +22,11 @@ class App extends React.Component {
         this.state = {
             stepsArray: [new StairsStepsRow(1)],
             strideLength: 1,
-            stairsFlights: 1
+            stairsFlights: 1,
+            responseStatus: null,
+            requiredSteps: null,
+            stepsMap: null,
+            showModal: false
         };
 
         this.handleSubmit = this.handleSubmit.bind(this);
@@ -31,12 +36,17 @@ class App extends React.Component {
         this.decreaseStride = this.decreaseStride.bind(this);
         this.increaseStepsArrayValue = this.increaseStepsArrayValue.bind(this);
         this.decreaseStepsArrayValue = this.decreaseStepsArrayValue.bind(this);
+        this.hideResultsModal = this.hideResultsModal.bind(this);
     }
 
     handleSubmit(event) {
         event.preventDefault();
+        var that = this;
+        var status;
+        var stepsRequired;
+        var stepsMapped;
         var requestUrl = this.buildRequestUrl();
-        var requestBody = this.buildRquestBody();
+        var requestBody = this.buildRequestBody();
         
         fetch(requestUrl, {
     	  method: 'POST',
@@ -44,21 +54,33 @@ class App extends React.Component {
     	    'Content-Type': 'application/json'
     	  },
     	  body: requestBody
-    	}).then(function(response) {
-		  console.log(response.headers.get('Content-Type'))
-		  console.log(response.headers.get('Date'))
-		  console.log(response.status)
-		  console.log(response.statusText)
-		  console.log(response.body)
-		})
+    	})
+        .then((response) => {
+            this.responseStatus = response.status;
+            return response.json()
+        })
+        .then((responseData) => { 
+            this.stepsRequired = responseData.requiredSteps;
+            this.stepsMapped = responseData.stepsMap;
+            that.updateStateWithResponse(this.status, this.stepsRequired, this.stepsMapped);
+        });
         
+    }
+
+    updateStateWithResponse(status, stepsRequired, stepsMapped){
+        this.setState({
+            responseStatus: status,
+            requiredSteps: stepsRequired,
+            stepsMap: stepsMapped,
+            showModal: true
+        });
     }
     
     buildRequestUrl() {
         return BaseUrl + "?strideLength=" + this.state.strideLength;
     }
     
-    buildRquestBody(){
+    buildRequestBody(){
     	var stepsIntegerArray = [];
     	var arrayLength = this.state.stepsArray.length;
     	for (var i = 0; i < arrayLength; i++) {
@@ -109,6 +131,12 @@ class App extends React.Component {
         });
     }
 
+    hideResultsModal(){
+        this.setState({
+            showModal: false
+        });
+    }
+
     render() {
         return ( 
           <BootStrap.Grid>
@@ -130,21 +158,24 @@ class App extends React.Component {
                           passDecreaseStrideClick={this.decreaseStride} 
                           passIncreaseStrideClick={this.increaseStride}>...</StridesPanel>
                   </BootStrap.Grid>
-                  <BootStrap.Col xs={4} xsOffset={4}>
+                  <BootStrap.Col xs={4} xsOffset={8}>
                     <BootStrap.Button bsStyle="primary" bsSize="large" type="submit">Submit</BootStrap.Button>
-                  </BootStrap.Col>  
+                  </BootStrap.Col> 
                 </form>
               </BootStrap.Row>
-              <BootStrap.Row>
-                Place for results
-              </BootStrap.Row>
+              <ResultsModal 
+                        responseStatus={this.state.responseStatus}
+                        requiredSteps={this.state.requiredSteps}
+                        stepsMap={this.state.stepsMap}
+                        showModal={this.state.showModal}
+                        closeResultsModal={this.hideResultsModal}>...</ResultsModal> 
             </BootStrap.Jumbotron>
-		      </BootStrap.Grid>
+		    </BootStrap.Grid>
         );
     }
 }
 
-ReactDOM.render( <
-    App / > ,
+ReactDOM.render( 
+    <App / > ,
     document.getElementById('react')
 )
