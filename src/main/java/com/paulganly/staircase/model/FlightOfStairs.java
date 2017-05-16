@@ -10,8 +10,6 @@ public class FlightOfStairs {
 	private boolean forwardFacing;
 	private boolean hasLanding;
 	private boolean isLastFlight;
-	
-	
 
 	public FlightOfStairs(int flightNumber, int numberOfSteps, boolean forwardFacing, boolean hasLanding,
 			boolean isLastFlight) {
@@ -23,6 +21,15 @@ public class FlightOfStairs {
 		this.isLastFlight = isLastFlight;
 	}
 
+	/**
+	 * Given a list of integers, creates a flight of stairs for each. Alternates whether the
+	 * stairs is forward or backward facing. If the flight is the last on the list,
+	 * marks it as such, otherwise set the hasLanding marker to say that a landing will
+	 * be needed after the flight.
+	 *
+	 * @param stairsFlights
+	 * @return a list of flights of stairs
+	 */
 	public static List<FlightOfStairs> getListOfStairsFlights(Integer[] stairsFlights) {
 		List<FlightOfStairs> stairsFlightsList = new ArrayList<>();
 		boolean isForwardFacing = true;
@@ -40,7 +47,7 @@ public class FlightOfStairs {
 		}
 		return stairsFlightsList;
 	}
-	
+
 	public int getFlightNumber() {
 		return flightNumber;
 	}
@@ -48,7 +55,7 @@ public class FlightOfStairs {
 	public void setFlightNumber(int flightNumber) {
 		this.flightNumber = flightNumber;
 	}
-	
+
 	public int getNumberOfSteps() {
 		return numberOfSteps;
 	}

@@ -1,15 +1,19 @@
 package com.paulganly.staircase.model;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-import org.apache.commons.lang3.ArrayUtils;
 
 public class Staircase {
 
 	private List<FlightOfStairs> stairsFlights;
 	private int strideLength;
 	private int[][] stepsMap;
+
+	private static final Integer USED_STEP_IN_MAP = 1;
+	private static final Integer UNUSED_STEP_IN_MAP = -1;
+	private static final Integer EMPTY_FIELD_IN_MAP = 0;
 
 	public Staircase(List<FlightOfStairs> stairsFlights, int strideLength) {
 		super();
@@ -18,137 +22,286 @@ public class Staircase {
 		generateStepArrayMap();
 	}
 
+	/**
+	 *
+	 */
 	private void generateStepArrayMap() {
-		List<int[][]> stepMapList = new ArrayList<>();
+
+		List<List<Integer>> stepMapList = new ArrayList<>();
 		for (FlightOfStairs flight : stairsFlights) {
-			int[][] stepMap = createEmptyStepMapForFlight(flight);
-			stepMap = inputStepsIntoMap(flight, stepMap);
-			stepMapList.add(0, stepMap);
-		}
-		setStepsMap(countEachStepFromBottom(zeroPadEachRow(stepMapList, stairsFlights)));
-	}
-
-	private int[][] createEmptyStepMapForFlight(FlightOfStairs flight) {
-		int height = 0;
-		int width = 0;
-
-		if (flight.isHasLanding()) {
-			height = flight.getNumberOfSteps() + 1;
-			width = flight.getNumberOfSteps() + 1;
-		} else if (flight.isLastFlight()) {
-			height = flight.getNumberOfSteps();
-			width = flight.getNumberOfSteps() + 1;
-		}
-
-		return new int[height][width];
-	}
-
-	private int[][] inputStepsIntoMap(FlightOfStairs flight, int[][] stepMap) {
-		int modifyColumnAfterEachStep;
-		int height = stepMap.length;
-		int width = stepMap[0].length;
-
-		if (flight.isForwardFacing()) {
-			modifyColumnAfterEachStep = 1;
-		} else {
-			modifyColumnAfterEachStep = -1;
-		}
-
-		int currentRow = height - 1;
-		int currentStep = 1;
-		int currentColumn = 0;
-		if (!flight.isForwardFacing()) {
-			currentColumn = width - 1;
-		}
-
-		for (int i = 0; i < flight.getNumberOfSteps(); i++) {
-			if ((currentStep % this.getStrideLength()) > 0) {
-				stepMap[currentRow][currentColumn] = -1;
-			} else {
-				stepMap[currentRow][currentColumn] = 1;
+			List<List<Integer>> stepMap = createRowsListGivenFlight(flight, strideLength);
+			if(!stepMapList.isEmpty()){
+				zeroPadEachRowOfFlight(stepMapList, stepMap, flight);
 			}
-			currentRow += 1;
-			currentStep += 1;
-			currentColumn += modifyColumnAfterEachStep;
+			stepMapList.addAll(0, stepMap);
 		}
+		setStepsMap(convertToIntArray(countEachStepFromBottom(stepMapList, stairsFlights)));
+	}
 
-		addLandingIfNeeded(flight, stepMap, width);
-		addLastStepIfNeeded(flight, stepMap, width);
+	/**
+	 *
+	 * @param stepMapList
+	 * @return
+	 */
+	private int[][] convertToIntArray(List<List<Integer>> stepMapList) {
+		int columns = stepMapList.get(0).size();
+		int rows = stepMapList.size();
+
+		int[][] stepMap = new int[rows][columns];
+		int rowCount = 0;
+
+		for(List<Integer> row: stepMapList){
+			int columnCount = 0;
+			for(Integer column: row){
+				stepMap[rowCount][columnCount] = column;
+				columnCount ++;
+			}
+			rowCount ++;
+		}
 
 		return stepMap;
 	}
 
-	private int[][] zeroPadEachRow(List<int[][]> stepMapList, List<FlightOfStairs> stairsFlights) {
-		int currentArrayWidth = 0;
-		int proceedingArrayWidth = 0;
-		int[][]combinedArray = stepMapList.get(0);
-		
-		for(int i = 0; i < stairsFlights.size(); i++){
-			
-			currentArrayWidth = combinedArray[0].length;
-			proceedingArrayWidth = stepMapList.get(i+1)[0].length;
-			
-			if(proceedingArrayWidth > currentArrayWidth){
-				
-				int difference = proceedingArrayWidth - currentArrayWidth;
-				int[] addedArray = new int[difference];
-				
-				for(int j = 0; j < combinedArray[0].length; i++){
-					
-					if(stairsFlights.get(i).isForwardFacing()){
-						combinedArray[j] = ArrayUtils.addAll(addedArray, combinedArray[j]);
-					}else{
-						combinedArray[j] = ArrayUtils.addAll(combinedArray[j], addedArray);
-					}
-				}		
-			}
-			
-			combinedArray = append(stepMapList.get(i+1), combinedArray);
-			
-		}
-		return combinedArray;
-	}
-	
-	public static int[][] append(int[][] a, int[][] b) {
-        int[][] result = new int[a.length + b.length][];
-        System.arraycopy(a, 0, result, 0, a.length);
-        System.arraycopy(b, 0, result, a.length, b.length);
-        return result;
-    }
-
-	private int[][] countEachStepFromBottom(int[][] stepsMap) {
+	/**
+	 *
+	 * @param stepMapList
+	 * @param stairsFlights
+	 * @return
+	 */
+	private List<List<Integer>> countEachStepFromBottom(List<List<Integer>> stepMapList, List<FlightOfStairs> stairsFlights) {
 		int currentCount = 1;
-		for(int i = 0; i < stepsMap.length ; i++){
-			for(int j = 0; j < stepsMap[i].length ; j++){
-				if(stepsMap[i][j] > 0){
-					stepsMap[i][j] = currentCount;
+		int lastRowIndex = stepMapList.size() - 1;
+		for(int i = lastRowIndex; i >= 0; i--){
+			int lastColumnindex = stepMapList.get(i).size() - 1;
+			for(int j = 0; j <= lastColumnindex; j++){
+				if(USED_STEP_IN_MAP.equals(stepMapList.get(i).get(j))){
+					stepMapList.get(i).set(j, currentCount);
 					currentCount ++;
-				}	
+				}
 			}
 		}
-		return stepsMap;
+		return stepMapList;
 	}
 
-	private void addLastStepIfNeeded(FlightOfStairs flight, int[][] stepMap, int width) {
-		if (flight.isLastFlight() && flight.getNumberOfSteps() % this.getStrideLength() > 0) {
-			if (flight.isForwardFacing()) {
-				stepMap[0][width - 1] = 1;
-			} else {
-				stepMap[0][0] = 1;
+	/**
+	 *
+	 * @param stepMapList
+	 * @param currentFlightMap
+	 * @param flight
+	 */
+	private void zeroPadEachRowOfFlight(List<List<Integer>> stepMapList, List<List<Integer>> currentFlightMap, FlightOfStairs flight) {
+		int previousFlightsWidth = stepMapList.get(0).size();
+		int endIndexOfPreviousFlight = getLastIndexOfPreviousFlight(stepMapList);
+		int offsetNeeded = getOffset(endIndexOfPreviousFlight, flight, previousFlightsWidth);
+
+		if(offsetNeeded > 0){
+			addOffsetsToNewRows(offsetNeeded, currentFlightMap, flight);
+		}
+
+		int currentFlightWidth = currentFlightMap.get(0).size();
+
+		if(currentFlightWidth > previousFlightsWidth){
+			int difference = currentFlightWidth - previousFlightsWidth;
+			if(flight.isForwardFacing()){
+				stepMapList = padEndOfAllRows(difference, stepMapList);
+			}else{
+				stepMapList = padStartOfAllRows(difference, stepMapList);
 			}
+		}else if(currentFlightWidth < previousFlightsWidth){
+			int difference =  previousFlightsWidth - currentFlightWidth;
+			if(flight.isForwardFacing()){
+				currentFlightMap = padEndOfAllRows(difference, currentFlightMap);
+			}else{
+				currentFlightMap = padStartOfAllRows(difference, currentFlightMap);
+			}
+		}
+
+	}
+
+	/**
+	 *
+	 * @param offset
+	 * @param currentFlightMap
+	 * @param flight
+	 */
+	private void addOffsetsToNewRows(int offset, List<List<Integer>> currentFlightMap, FlightOfStairs flight) {
+		if(flight.isForwardFacing()){
+			currentFlightMap = padStartOfAllRows(offset, currentFlightMap);
+		}else{
+			currentFlightMap = padEndOfAllRows(offset, currentFlightMap);
 		}
 	}
 
-	private void addLandingIfNeeded(FlightOfStairs flight, int[][] stepMap, int width) {
+	/**
+	 *
+	 * @param endIndexOfPreviousFlight
+	 * @param currentFlight
+	 * @param previousFlightsWidth
+	 * @return
+	 */
+	private int getOffset(int endIndexOfPreviousFlight, FlightOfStairs currentFlight, int previousFlightsWidth) {
+		int offset = 0;
+		boolean previousFlightFacedForward = !currentFlight.isForwardFacing();
+		if(previousFlightFacedForward){
+			offset = previousFlightsWidth - endIndexOfPreviousFlight;
+		}else{
+			offset = endIndexOfPreviousFlight + 1;
+		}
+		return offset;
+	}
+
+	/**
+	 *
+	 * @param stepMapList
+	 * @return
+	 */
+	private int getLastIndexOfPreviousFlight(List<List<Integer>> stepMapList) {
+		List<Integer> lastRow = stepMapList.get(0);
+		int indexCounter = 0;
+		for(Integer values: lastRow){
+			if(values > 0){
+				return indexCounter;
+			}
+			indexCounter++;
+		}
+		return indexCounter;
+	}
+
+	/**
+	 *
+	 * @param difference
+	 * @param stepMapList
+	 * @return
+	 */
+	private List<List<Integer>> padStartOfAllRows(int difference, List<List<Integer>> stepMapList) {
+		List<Integer> zeroesList = new ArrayList<Integer>(Collections.nCopies(difference, 0));
+
+		for(List<Integer> rows: stepMapList){
+			rows.addAll(0, zeroesList);
+		}
+
+		return stepMapList;
+	}
+
+	/**
+	 *
+	 * @param difference
+	 * @param stepMapList
+	 * @return
+	 */
+	private List<List<Integer>> padEndOfAllRows(int difference, List<List<Integer>> stepMapList) {
+		List<Integer> zeroesList = new ArrayList<Integer>(Collections.nCopies(difference, 0));
+
+		for(List<Integer> rows: stepMapList){
+			rows.addAll(zeroesList);
+		}
+		return stepMapList;
+	}
+
+	/**
+	 *
+	 * @param flight
+	 * @param strideLength
+	 * @return
+	 */
+	private List<List<Integer>> createRowsListGivenFlight(FlightOfStairs flight, int strideLength){
+		List<List<Integer>> rowList = new ArrayList<>();
+		int rows = getRowsRequiredForFlight(flight);
+		int columns = getColumnsRequiredForFlight(flight);
+
+		rowList = fillEachRowForFlight(rows, columns, flight, strideLength);
+
+		if (!flight.isForwardFacing()) {
+			reverseEachRow(rowList);
+		}
+
+		return rowList;
+	}
+
+	/**
+	 *
+	 * @param rowList
+	 */
+	private void reverseEachRow(List<List<Integer>> rowList) {
+		for(List<Integer> row: rowList){
+			Collections.reverse(row);
+		}
+	}
+
+	/**
+	 *
+	 * @param rows
+	 * @param columns
+	 * @param flight
+	 * @param strideLength
+	 * @return
+	 */
+	private List<List<Integer>> fillEachRowForFlight(int rows, int columns, FlightOfStairs flight, int strideLength) {
+		List<List<Integer>> rowList = new ArrayList<>();
+		int nextColumnToPlaceStep = 0;
+
+		for(int row = 0; row < rows; row++){
+			List<Integer> thisRow = new ArrayList<>();
+
+			for(int column = 0; column < columns; column++){
+				if(nextColumnToPlaceStep == column){
+					if(((column+1)%strideLength) == 0){
+						thisRow.add(USED_STEP_IN_MAP);
+					}else{
+						thisRow.add(UNUSED_STEP_IN_MAP);
+					}
+				}else{
+					thisRow.add(EMPTY_FIELD_IN_MAP);
+				}
+			}
+			nextColumnToPlaceStep ++;
+			rowList.add(0, thisRow);
+		}
+
+		if(flight.isHasLanding()){
+			rowList.get(0).set(columns-1, USED_STEP_IN_MAP);
+			rowList.get(0).set(columns-2, USED_STEP_IN_MAP);
+		}
+
+		if(flight.isLastFlight()){
+			rowList.get(0).set(columns-1, USED_STEP_IN_MAP);
+		}
+
+		return rowList;
+	}
+
+	/**
+	 *
+	 * @param flight
+	 * @return
+	 */
+	private int getColumnsRequiredForFlight(FlightOfStairs flight) {
+		int width = 0;
+
 		if (flight.isHasLanding()) {
-			if (flight.isForwardFacing()) {
-				stepMap[0][width - 1] = 1;
-				stepMap[0][width - 2] = 1;
-			} else {
-				stepMap[0][0] = 1;
-				stepMap[0][1] = 1;
-			}
+			width = flight.getNumberOfSteps() + 2;
+		} else if (flight.isLastFlight()) {
+			width = flight.getNumberOfSteps() + 1;
 		}
+
+		return width;
+	}
+
+	/**
+	 *
+	 * @param flight
+	 * @return
+	 */
+	private int getRowsRequiredForFlight(FlightOfStairs flight) {
+		int height = 0;
+
+		if (flight.isHasLanding()) {
+			height = flight.getNumberOfSteps() + 1;
+		} else if (flight.isLastFlight()) {
+			height = flight.getNumberOfSteps();
+		}
+
+		return height;
 	}
 
 	public List<FlightOfStairs> getStairsFlights() {

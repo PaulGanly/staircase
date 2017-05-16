@@ -12,7 +12,8 @@
     "calculator",
     "rest",
     "spring",
-    "react"
+    "react",
+    "fetch"
   ],
   "author": "Paul Ganly",
   "license": "Apache-2.0",

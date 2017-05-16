@@ -1,15 +1,12 @@
 package com.paulganly.staircase.calculator;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import com.paulganly.staircase.calculator.StepsCalculator;
 
-@SuppressWarnings("deprecation")
 public class StepsCalculatorTest {
 
 	StepsCalculator stepsCalculator = new StepsCalculatorImpl();
@@ -28,22 +25,25 @@ public class StepsCalculatorTest {
 	@Test
 	public void testCalculationResponse1() {
 		flights = new Integer[]{17};
+		int[] lastRow = new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 6};
 		assertEquals("Required steps must be 6", 6, stepsCalculator.calculateSteps(3, flights).getRequiredSteps());
-		assertEquals("Steps must be 99", new int[5][10], stepsCalculator.calculateSteps(3, flights).getStepsMap());
+		assertArrayEquals("Last row must be correct", lastRow, stepsCalculator.calculateSteps(3, flights).getStepsMap()[0]);
 	}
 
 	@Test
 	public void testCalculationResponse2() {
 		flights = new Integer[]{17, 17};
+		int[] lastRow = new int[]{13, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 		assertEquals("Required steps must be 14", 14, stepsCalculator.calculateSteps(3, flights).getRequiredSteps());
-		assertEquals("Unexpected steps map", new int[5][10], stepsCalculator.calculateSteps(3, flights).getStepsMap());
+		assertArrayEquals("Last row must be correct", lastRow, stepsCalculator.calculateSteps(3, flights).getStepsMap()[0]);
 	}
 
 	@Test
 	public void testCalculationResponse3() {
 		flights = new Integer[]{4,9,8,11,7,20,14};
+		int[] lastRow = new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 47, 48, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 		assertEquals("Required steps must be 50", 50, stepsCalculator.calculateSteps(2, flights).getRequiredSteps());
-		assertEquals("Unexpected steps map", new int[5][10], stepsCalculator.calculateSteps(2, flights).getStepsMap());
+		assertArrayEquals("Last row must be correct", lastRow, stepsCalculator.calculateSteps(2, flights).getStepsMap()[0]);
 	}
 
 	@Test

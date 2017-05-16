@@ -38,6 +38,12 @@ public class StepsCalculatorImpl implements StepsCalculator {
 		return true;
 	}
 
+	/**
+	 * 
+	 * @param strideLength
+	 * @param stairsFlights
+	 * @return
+	 */
 	private int getNumberOfStepsRequiredForFlights(int strideLength, Integer[] stairsFlights) {
 		int totalSteps = 0;
 		for (Integer flightSteps : stairsFlights) {
@@ -49,6 +55,11 @@ public class StepsCalculatorImpl implements StepsCalculator {
 		return totalSteps;
 	}
 
+	/**
+	 * 
+	 * @param stairsFlights
+	 * @return
+	 */
 	private int getNumberOfStepsRequiredForLandings(Integer[] stairsFlights) {
 		int numberOfLandings = stairsFlights.length - 1;
 		return numberOfLandings * STEPS_REQUIRED_FOR_EACH_LANDING;
