@@ -26,6 +26,7 @@ class ResultsModal extends React.Component {
 
     render() {
 		var stepMapRowList = [];
+		var widthOfTable = 0;
 
 		if(this.props.stepsMap != null){
 			var stepMap = this.props.stepsMap;
@@ -34,7 +35,6 @@ class ResultsModal extends React.Component {
 				var stepMapRow = [];
 				var stepRow = stepMap[i];
 				for(var j = 0; j < stepRow.length; j++) {
-					console.log("stepMap[" + i + "][" + j + "] = " + stepRow[j]);
 					if(stepRow[j] == 0){
 						stepMapRow.push(new StepsMapElement('emptyBlock', ' '));
 					}else if(stepRow[j] < 0){
@@ -45,6 +45,7 @@ class ResultsModal extends React.Component {
 				}
 
 				stepMapRowList.push(stepMapRow);
+				widthOfTable = (stepMap[0].length)*35+'px';
 			}
 		}
 
@@ -70,7 +71,7 @@ class ResultsModal extends React.Component {
 					<div>
 					<BootStrap.Button onClick={ ()=> this.setState({ mapOpen: !this.state.mapOpen })}>Show Map</BootStrap.Button>
 					<BootStrap.Panel collapsible expanded={this.state.mapOpen}>
-						<BootStrap.Table responsive>
+						<BootStrap.Table style={{width : widthOfTable}} responsive>
 							<tbody>
 								{stepsMap}
 							</tbody>

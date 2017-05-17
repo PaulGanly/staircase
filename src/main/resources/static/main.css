@@ -25,3 +25,8 @@
     text-align: center;
     color: black;
 }
+
+.modal-body {
+    max-width: 100%;
+    overflow-x: auto;
+}
